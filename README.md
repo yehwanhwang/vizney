@@ -31,7 +31,7 @@ A style is a look and feel, not a dataset. The sample data only shows the style 
 
 | Folder | Style | Feel | Sample data | Blog posts |
 |---|---|---|---|---|
-| [`chalk`](https://git.vizney.com/gallery/chalk/) | Vizney Chalk (초크) · [style.md](gallery/chalk/style.md) | Dark sidebar, pastel KPI tiles | Online store orders (fictional) | Not yet published |
+| [`chalk`](https://git.vizney.com/gallery/chalk/) | Chalk (초크) · [style.md](gallery/chalk/style.md) | Dark sidebar, pastel KPI tiles | Online store orders (fictional) | Not yet published |
 
 ### Recreations
 
@@ -44,7 +44,7 @@ Rebuilds of someone else's dashboard. They keep the original's name and credit i
 
 ## Adding a style
 
-1. Name the style with one evocative material or texture word (Chalk, Glass, Linen …) and call it "Vizney <Name>". The folder is the name in lowercase: `gallery/chalk/`. Never name a folder after its sample data.
+1. Name the style with one evocative material or texture word (Chalk, Glass, Linen …) and use the name on its own: Vizney is the collection, not part of the name. The folder is the name in lowercase: `gallery/chalk/`. Never name a folder after its sample data.
 2. Give it a one-line subtitle that says what it looks like ("Dark sidebar, pastel KPI tiles"). The name is for remembering; the subtitle is for first-time readers and search.
 3. Put two files in the folder:
    - `index.html`: the sample screen, self-contained (data included), Korean and English in one file via `?lang=ko` / `?lang=en`.
@@ -70,7 +70,7 @@ Paste into an HTML card and change the folder, language and title:
 
 ```html
 <figure class="kg-card kg-embed-card kg-width-wide">
-  <iframe data-vizney-embed src="https://git.vizney.com/gallery/chalk/?lang=ko&amp;embed=1" title="Vizney Chalk 스타일 대시보드" loading="lazy" style="display:block;width:100%;height:820px;border:1px solid #e6e6e6;border-radius:12px"></iframe>
+  <iframe data-vizney-embed src="https://git.vizney.com/gallery/chalk/?lang=ko&amp;embed=1" title="Chalk 스타일 대시보드" loading="lazy" style="display:block;width:100%;height:820px;border:1px solid #e6e6e6;border-radius:12px"></iframe>
   <figcaption><a href="https://git.vizney.com/gallery/chalk/?lang=ko" target="_blank" rel="noopener">전체 화면으로 보기 ↗</a></figcaption>
 </figure>
 <script src="https://git.vizney.com/lib/embed-host.js" defer></script>

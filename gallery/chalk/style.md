@@ -1,11 +1,11 @@
-# Vizney Chalk
+# Chalk
 
 **Dark sidebar, pastel KPI tiles** · 다크 사이드바와 파스텔 KPI 카드
 
-A charcoal chalkboard frame with soft chalk-pastel cards on a clean white canvas. Calm, friendly and quick to scan: the pastels color the tiles, while the data marks stay thin and dark.
+A dashboard style from the Vizney gallery. A charcoal chalkboard frame with soft chalk-pastel cards on a clean white canvas. Calm, friendly and quick to scan: the pastels color the tiles, while the data marks stay thin and dark.
 
 - Live sample: https://git.vizney.com/gallery/chalk/ (add `?lang=en` for English)
-- To reuse it, ask for "the Vizney Chalk style" and share this page: https://git.vizney.com/gallery/chalk/style.html
+- To reuse it, ask for "the Chalk style" and share this page: https://git.vizney.com/gallery/chalk/style.html
 
 
 ## Layout
