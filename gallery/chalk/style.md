@@ -41,7 +41,7 @@ A charcoal chalkboard frame with soft chalk-pastel cards on a clean white canvas
 Chart marks, checked for color-vision deficiency against white:
 
 - Line series: ink `#1A1A1A` (solid, the main series) and green `#478F35` (dashed 6/5, the comparison).
-- Categories, at most four: `#5EA6DA`, `#478F35`, `#F39D52`, `#8C8C8C` (gray is "other").
+- Categories: up to three hues, `#5EA6DA`, `#478F35`, `#F39D52`, plus gray `#8C8C8C` for "other".
 
 Pastels are for tile backgrounds only, never for marks or text.
 
@@ -75,7 +75,7 @@ Pastels are for tile backgrounds only, never for marks or text.
 
 - No card inside a card.
 - No gradients or shadows on cards; only tooltips cast a shadow.
-- No more than four colored categories; fold the rest into gray "other".
+- No more than three colored categories; fold the rest into gray "other".
 - No dual axes.
 
 
