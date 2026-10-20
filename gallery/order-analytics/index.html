@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="robots" content="noindex">
+<title>주문 분석 대시보드 · 샘플</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/spoqa/spoqa-han-sans@v3.3.0/css/SpoqaHanSansNeo.css">
+<script src="/lib/embed.js" defer></script>
+<style>
+  :root{
+    --font:'Spoqa Han Sans Neo',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif;
+    --ink:#161616; --ink-2:#474747; --muted:#8B8B8B; --faint:#A3A3A3;
+    --surface:#FFFFFF; --border:#EAEAEA; --grid:#EFEFEF;
+    --side:#1D1D1D; --side-ink:#B5B5B5; --side-hover:#272727; --side-active:#333333;
+    --pill:#F1F1F1; --pill-hover:#E7E7E7; --pill-active:#D2E7F3;
+    --k-blue:#D2E7F3; --k-green:#D9EEC8; --k-orange:#FEC48E; --k-dark:#2A2A2A;
+    --good:#1E8449; --bad:#D0392B; --flat:#8B8B8B;
+    --radius:12px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:var(--font);font-size:13px;line-height:1.45;color:var(--ink);background:var(--surface);-webkit-font-smoothing:antialiased}
+  button{font:inherit;color:inherit}
+  svg{flex:none}
+  .sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  :focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+  /* ---------- shell ---------- */
+  .app{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:100vh}
+  .sidebar{background:var(--side);color:#fff;z-index:20}
+  .sidebar__inner{position:sticky;top:0;max-height:100vh;overflow-y:auto;padding:26px 16px;display:flex;flex-direction:column;gap:30px}
+  .side-top{display:flex;align-items:center;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:10px;padding:0 10px;font-size:17px;font-weight:700;letter-spacing:-.01em}
+  .brand svg{width:22px;height:22px}
+  .nav{display:flex;flex-direction:column;gap:4px}
+  .nav a{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;color:var(--side-ink);text-decoration:none;font-weight:500;transition:background .15s,color .15s}
+  .nav a svg{width:17px;height:17px}
+  .nav a:hover{background:var(--side-hover);color:#fff}
+  .nav a[aria-current="page"]{background:var(--side-active);color:#fff}
+  .nav a:focus-visible{outline-color:#fff}
+  .menu-btn{display:none!important;color:#fff}
+  .menu-btn:hover{background:var(--side-hover)!important}
+
+  .main{min-width:0;padding:28px 36px 36px}
+  .wrap{max-width:1320px;margin:0 auto}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .topbar h1{margin:0;font-size:22px;font-weight:700;letter-spacing:-.01em;white-space:nowrap}
+  .actions{display:flex;align-items:center;gap:4px}
+  .icon-btn{width:36px;height:36px;display:grid;place-items:center;border:0;border-radius:50%;background:transparent;cursor:pointer}
+  .icon-btn:hover{background:#F2F2F2}
+  .icon-btn svg{width:19px;height:19px}
+  .bell{position:relative}
+  .bell::after{content:'';position:absolute;top:8px;right:9px;width:7px;height:7px;border-radius:50%;background:#F39D52;box-shadow:0 0 0 2px var(--surface)}
+  .lang{display:flex;align-items:center;margin:0 6px;padding:3px;border-radius:8px;background:#F2F2F2}
+  .lang button{border:0;background:transparent;padding:4px 9px;border-radius:6px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer}
+  .lang button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  .avatar{width:36px;height:36px;margin-left:4px;border-radius:50%;background:#F6B58B;color:#5B2F12;display:grid;place-items:center}
+  .avatar svg{width:20px;height:20px}
+
+  /* ---------- filters ---------- */
+  .tabs{display:flex;gap:10px;margin-top:22px;overflow-x:auto;scrollbar-width:none;padding:2px}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex:none;height:34px;padding:0 16px;border:0;border-radius:8px;background:var(--pill);color:var(--ink-2);font-size:13px;font-weight:500;cursor:pointer;transition:background .15s,color .15s}
+  .tab:hover{background:var(--pill-hover)}
+  .tab[aria-selected="true"]{background:var(--pill-active);color:var(--ink);font-weight:700}
+  .sec-head{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:4px 12px;margin:26px 0 14px}
+  .sec-head h2{margin:0;font-size:15px;font-weight:700}
+  .period{color:var(--muted)}
+
+  /* ---------- KPI cards ---------- */
+  .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+  .kpi{min-height:128px;padding:18px 20px;border-radius:var(--radius);display:flex;flex-direction:column;justify-content:space-between;gap:16px}
+  .kpi--blue{background:var(--k-blue)} .kpi--green{background:var(--k-green)}
+  .kpi--orange{background:var(--k-orange)} .kpi--dark{background:var(--k-dark);color:#fff}
+  .kpi__icon{width:20px;height:20px}
+  .kpi__main{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px}
+  .kpi__value{font-size:28px;font-weight:700;line-height:1.15;letter-spacing:-.02em;white-space:nowrap}
+  .u{font-size:13px;font-weight:700;letter-spacing:0;margin-left:2px}
+  .u.pre{margin:0 2px 0 0}
+  .delta{display:inline-flex;align-items:center;gap:4px;padding:3px 7px 3px 6px;border-radius:6px;background:#fff;color:var(--ink);font-size:13px;font-weight:700;line-height:1.25;white-space:nowrap}
+  .delta svg{width:14px;height:14px}
+  .delta.is-good svg{color:var(--good)} .delta.is-bad svg{color:var(--bad)} .delta.is-flat svg{color:var(--flat)}
+  .kpi__label{margin-top:4px;font-size:13px;font-weight:500;color:var(--ink-2)}
+  .kpi--dark .kpi__label{color:#C8C8C8}
+  .kpi__value,.delta{transition:opacity .14s ease,transform .14s ease}
+  .kpi.is-swap .kpi__value,.kpi.is-swap .delta{opacity:0;transform:translateY(3px)}
+
+  /* ---------- chart cards ---------- */
+  .charts{display:grid;grid-template-columns:minmax(0,2fr) minmax(320px,1fr);gap:16px;margin-top:16px}
+  .card{min-width:0;padding:20px 22px 18px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);display:flex;flex-direction:column}
+  .card__head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px 16px;margin-bottom:10px}
+  .card__title{margin:0;font-size:15px;font-weight:700}
+  .card__title small{margin-left:8px;font-size:13px;font-weight:500;color:var(--muted)}
+  .legend{display:flex;gap:16px}
+  .legend button{display:inline-flex;align-items:center;gap:7px;padding:2px 0;border:0;background:transparent;font-size:12px;font-weight:500;color:var(--ink-2);cursor:default}
+  .legend__val{display:none;min-width:3.6em;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+  .card.is-narrow .legend__val{display:inline}
+  .card.is-narrow .lc-tip{display:none}
+
+  .lc{position:relative;flex:1;min-height:300px;touch-action:pan-y;border-radius:8px}
+  .lc > svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+  .lc text{font-family:var(--font)}
+  .tick{font-size:12px;fill:var(--faint);font-variant-numeric:tabular-nums}
+  .xtick{font-size:12px;fill:var(--muted)}
+  .xtick.is-active{fill:var(--ink);font-weight:700}
+  .ser,.endpt,.focus circle{transition:opacity .15s}
+  .lc.emph-wd .ser-we,.lc.emph-wd .fd-we{opacity:.18}
+  .lc.emph-we .ser-wd,.lc.emph-we .fd-wd,.lc.emph-we .endpt{opacity:.18}
+  .lc-tip{position:absolute;top:0;left:0;min-width:146px;white-space:nowrap;padding:9px 12px 10px;border-radius:8px;background:#232323;color:#fff;font-size:12px;line-height:1.35;box-shadow:0 8px 20px rgba(0,0,0,.16);pointer-events:none;transition:transform .08s linear}
+  .lc-tip__title{margin-bottom:6px;font-weight:700}
+  .lc-tip__row{display:grid;grid-template-columns:18px 1fr auto;align-items:center;gap:8px}
+  .lc-tip__row + .lc-tip__row{margin-top:3px}
+  .lc-tip__label{color:#BDBDBD}
+  .lc-tip__val{font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+
+  .gauge-card{container-type:inline-size}
+  .gauge-body{flex:1;display:grid;align-content:center;justify-items:center;gap:18px}
+  .ring{position:relative;width:100%;max-width:250px}
+  .ring svg{display:block;width:100%;height:auto;overflow:visible}
+  .ring .seg{transition:opacity .15s}
+  .ring.has-focus .seg:not(.is-on){opacity:.22}
+  .ring__center{position:absolute;left:0;right:0;top:57.14%;transform:translateY(-50%);text-align:center;pointer-events:none}
+  .ring__label{font-size:13px;font-weight:500;color:var(--muted)}
+  .ring__value{font-size:30px;font-weight:700;line-height:1.2;letter-spacing:-.02em}
+  .cat-legend{width:100%;max-width:340px;margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 16px}
+  .cat-legend li{transition:opacity .15s}
+  .cat-legend.has-focus li:not(.is-on){opacity:.4}
+  .cat-legend button{width:100%;display:grid;grid-template-columns:11px minmax(0,1fr);column-gap:9px;row-gap:1px;padding:5px 6px;border:0;border-radius:8px;background:transparent;text-align:left;cursor:default}
+  .cat-legend .dot{width:11px;height:11px;border-radius:50%;align-self:center}
+  .cat-legend .name{font-size:13px;font-weight:700}
+  .cat-legend .val{grid-column:2;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+  @container (min-width:540px){
+    .gauge-body{grid-template-columns:250px minmax(0,1fr);justify-items:start;align-items:center;column-gap:32px}
+    .cat-legend{grid-template-columns:1fr;max-width:280px}
+  }
+  .foot{margin:18px 0 0;font-size:12px;color:var(--faint)}
+
+  /* ---------- embed (블로그 iframe, ?embed=1 · lib/embed.js) ---------- */
+  html.vz-embed .app{min-height:0}
+  html.vz-embed .foot{display:none}
+
+  /* ---------- responsive ---------- */
+  @media (max-width:1180px){
+    .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .charts{grid-template-columns:minmax(0,1fr)}
+  }
+  @media (max-width:860px){
+    .app{display:block}
+    .sidebar{position:sticky;top:0}
+    .sidebar__inner{position:static;max-height:none;overflow:visible;padding:10px 12px 10px 16px;gap:0}
+    .menu-btn{display:grid!important}
+    .nav{display:none;padding:10px 0 6px}
+    .sidebar.is-open .nav{display:flex}
+    .main{padding:20px 16px 28px}
+  }
+  @media (max-width:520px){
+    .topbar h1{font-size:20px}
+    .lang{margin:0 2px}
+    .kpis{gap:10px}
+    .kpi{min-height:112px;padding:14px}
+    .kpi__main{flex-direction:column;align-items:flex-start}
+    .kpi__value{font-size:23px}
+    .card{padding:16px 14px 14px}
+    .lc{min-height:250px}
+  }
+  @media (max-width:420px){ .actions .search{display:none} }
+  @media (prefers-reduced-motion:reduce){ *{transition:none!important} }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+   <div class="sidebar__inner">
+    <div class="side-top">
+      <div class="brand">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 3.4a8.6 8.6 0 0 1 8.6 8.6H12z" fill="currentColor"/></svg>
+        <span>Mallow.</span>
+      </div>
+      <button type="button" class="icon-btn menu-btn" id="menuBtn" aria-expanded="false" aria-controls="nav" data-i18n-aria="menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+    <nav class="nav" id="nav">
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.6"/></svg><span data-i18n="nav.0"></span></a>
+      <a href="#" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M5 20v-6M12 20V5M19 20v-10"/></svg><span data-i18n="nav.1"></span></a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9"/></svg><span data-i18n="nav.2"></span></a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c1.9.7 3.1 2.4 3.5 5.2"/></svg><span data-i18n="nav.3"></span></a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M3.5 10v4h3l7 4.5v-13L6.5 10z"/><path d="M17 9a4 4 0 0 1 0 6"/></svg><span data-i18n="nav.4"></span></a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="m12 3.5 8.5 4.5-8.5 4.5L3.5 8z"/><path d="m3.5 12.5 8.5 4.5 8.5-4.5M3.5 16.5 12 21l8.5-4.5"/></svg><span data-i18n="nav.5"></span></a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M2.5 10h19M6.5 15h4"/></svg><span data-i18n="nav.6"></span></a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span data-i18n="nav.7"></span></a>
+    </nav>
+   </div>
+  </aside>
+
+  <main class="main">
+    <div class="wrap">
+      <header class="topbar">
+        <h1 data-i18n="pageTitle"></h1>
+        <div class="actions">
+          <button type="button" class="icon-btn search" data-i18n-aria="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg></button>
+          <button type="button" class="icon-btn bell" data-i18n-aria="notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg></button>
+          <div class="lang" role="group" aria-label="Language">
+            <button type="button" data-lang="ko" aria-pressed="true">KO</button>
+            <button type="button" data-lang="en" aria-pressed="false">EN</button>
+          </div>
+          <span class="avatar" role="img" data-i18n-aria="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="9.5" r="3.6"/><path d="M5.5 19.5c1.2-3.2 3.6-4.8 6.5-4.8s5.3 1.6 6.5 4.8"/></svg></span>
+        </div>
+      </header>
+
+      <div class="tabs" id="tabs" role="tablist"></div>
+
+      <div id="panel" role="tabpanel">
+        <div class="sec-head">
+          <h2 data-i18n="section"></h2>
+          <span class="period" data-i18n="period"></span>
+        </div>
+
+        <section class="kpis" id="kpis"></section>
+
+        <section class="charts">
+          <article class="card">
+            <div class="card__head">
+              <h3 class="card__title"><span data-i18n="lineTitle"></span><small data-i18n="lineSub"></small></h3>
+              <div class="legend">
+                <button type="button" data-s="wd"><svg width="20" height="8" aria-hidden="true"><line x1="1" y1="4" x2="19" y2="4" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round"/></svg><span data-i18n="wd"></span><span class="legend__val" data-lv="wd"></span></button>
+                <button type="button" data-s="we"><svg width="20" height="8" aria-hidden="true"><line x1="1" y1="4" x2="19" y2="4" stroke="#478F35" stroke-width="2" stroke-dasharray="5 4"/></svg><span data-i18n="we"></span><span class="legend__val" data-lv="we"></span></button>
+              </div>
+            </div>
+            <div class="lc" id="lc" tabindex="0" role="group">
+              <svg aria-hidden="true"></svg>
+              <div class="lc-tip" id="lcTip" aria-hidden="true">
+                <div class="lc-tip__title"></div>
+                <div class="lc-tip__row"><svg width="18" height="8"><line x1="1" y1="4" x2="17" y2="4" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/></svg><span class="lc-tip__label" data-i18n="wd"></span><span class="lc-tip__val" data-v="wd"></span></div>
+                <div class="lc-tip__row"><svg width="18" height="8"><line x1="1" y1="4" x2="17" y2="4" stroke="#93CC74" stroke-width="2" stroke-dasharray="4 3"/></svg><span class="lc-tip__label" data-i18n="we"></span><span class="lc-tip__val" data-v="we"></span></div>
+              </div>
+            </div>
+            <p class="sr-only" id="lcLive" aria-live="polite"></p>
+            <div class="sr-only" id="lcTable"></div>
+          </article>
+
+          <article class="card gauge-card">
+            <div class="card__head"><h3 class="card__title"><span data-i18n="ringTitle"></span></h3></div>
+            <div class="gauge-body">
+              <div class="ring" id="ring">
+                <svg viewBox="0 0 240 196" role="img"></svg>
+                <div class="ring__center"><div class="ring__label" id="ringLabel"></div><div class="ring__value" id="ringValue"></div></div>
+              </div>
+              <ul class="cat-legend" id="catLegend"></ul>
+            </div>
+            <div class="sr-only" id="ringTable"></div>
+          </article>
+        </section>
+      </div>
+
+      <p class="foot" data-i18n="footer"></p>
+    </div>
+  </main>
+</div>
+
+<script>
+(() => {
+  'use strict';
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const MINUS = '−';
+  const REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const COLOR = { ink: '#1A1A1A', green: '#478F35', cats: ['#5EA6DA', '#478F35', '#F39D52', '#8C8C8C'] };
+
+  /* ================= 가상 데이터 (최근 30일 / 직전 30일) ================= */
+  const DAYS = { wd: 21, we: 9 };            // 최근 30일 중 평일·주말 일수
+  const RAW = {
+    // rev: 매출(원), ord: 주문 수, cxl: 취소·반품 건수 — [최근 30일, 직전 30일]
+    // cat: 카테고리별 주문 [패션, 뷰티, 식품, 기타], r: 주말/평일 일평균 주문 배수
+    // wd·we: 시간대별 주문 분포(기저값 + 피크[중심 시각, 폭, 높이])
+    web:    { rev: [241600000, 226800000], ord: [3180, 3020], cxl: [104, 118], cat: [1310, 820, 560, 490], r: 0.78,
+              wd: { base: .15, b: [[10.5, 1.6, .9], [13, 1.2, 1.1], [15.5, 1.8, .8], [21.5, 1.6, .9]] },
+              we: { base: .15, b: [[11.5, 2.2, .7], [15, 2.5, .8], [21, 1.8, .9]] } },
+    app:    { rev: [318400000, 287900000], ord: [5120, 4640], cxl: [148, 162], cat: [1890, 1420, 1010, 800], r: 1.22,
+              wd: { base: .22, b: [[8.3, 1, .45], [12.5, 1.3, .6], [18.7, 1.1, .45], [22.4, 1.6, 1.2]] },
+              we: { base: .16, b: [[11, 2, .6], [16, 2.2, .55], [22, 1.6, 1.2]] } },
+    market: { rev: [196300000, 205700000], ord: [3060, 3190], cxl: [121, 109], cat: [760, 590, 960, 750], r: 1.02,
+              wd: { base: .18, b: [[10.5, 2, .7], [14.5, 2.4, .75], [21, 2, .85]] },
+              we: { base: .18, b: [[11.5, 2.2, .75], [16, 2.5, .8], [21, 2, .8]] } },
+    live:   { rev: [86000000, 71400000], ord: [1120, 905], cxl: [52, 38], cat: [280, 540, 220, 80], r: 1.35,
+              wd: { base: .05, b: [[12.3, .7, .45], [20.4, .8, 1.6], [21.5, 1, .6]] },
+              we: { base: .05, b: [[14.3, .8, 1], [20.4, .8, 1.4], [21.5, 1, .5]] } }
+  };
+  const CHANNELS = ['all', 'web', 'app', 'market', 'live'];
+
+  function profile(spec) {
+    const w = [];
+    for (let h = 0; h < 24; h++) {
+      let v = spec.base;
+      for (const [mu, s, a] of spec.b) {
+        let d = Math.abs(h + .5 - mu);
+        d = Math.min(d, 24 - d);
+        v += a * Math.exp(-(d * d) / (2 * s * s));
+      }
+      w.push(v);
+    }
+    const sum = w.reduce((p, c) => p + c, 0);
+    return w.map(v => v / sum);
+  }
+
+  const DATA = {};
+  (function build() {
+    const all = { rev: [0, 0], ord: [0, 0], cxl: [0, 0], cat: [0, 0, 0, 0], wd: Array(24).fill(0), we: Array(24).fill(0) };
+    for (const k of CHANNELS.slice(1)) {
+      const c = RAW[k];
+      const dWd = c.ord[0] / (DAYS.wd + DAYS.we * c.r), dWe = dWd * c.r;
+      const wd = profile(c.wd).map(s => s * dWd), we = profile(c.we).map(s => s * dWe);
+      DATA[k] = { rev: c.rev, ord: c.ord, cxl: c.cxl, cat: c.cat, wd, we };
+      for (const f of ['rev', 'ord', 'cxl']) { all[f][0] += c[f][0]; all[f][1] += c[f][1]; }
+      c.cat.forEach((v, i) => { all.cat[i] += v; });
+      for (let h = 0; h < 24; h++) { all.wd[h] += wd[h]; all.we[h] += we[h]; }
+    }
+    DATA.all = all;
+  })();
+
+  /* ================= 문구 ================= */
+  const fmt12 = h => (h % 12 === 0 ? 12 : h % 12) + (h < 12 ? ' AM' : ' PM');
+  const STR = {
+    ko: {
+      docTitle: '주문 분석 대시보드 · 샘플',
+      nav: ['홈', '주문 분석', '상품', '고객', '프로모션', '재고', '정산', '활동 로그'],
+      menu: '메뉴', search: '검색', notifications: '알림', profile: '내 계정',
+      pageTitle: '주문 분석', tablist: '판매 채널',
+      tabs: { all: '전체', web: '자사몰', app: '앱', market: '오픈마켓', live: '라이브커머스' },
+      section: '주문 현황', period: '최근 30일 · 직전 30일 대비',
+      kpi: { rev: '매출', ord: '주문 수', cxl: '취소·반품률', aov: '객단가' },
+      lineTitle: '시간대별 주문', lineSub: '일평균', wd: '평일', we: '주말',
+      ringTitle: '카테고리별 주문', total: '전체 주문', cats: ['패션', '뷰티', '식품', '기타'],
+      unitCount: '건', hourHead: '시간대', catHead: '카테고리', ordHead: '주문 수', shareHead: '비중',
+      hourTick: h => h + '시',
+      hourRange: h => `${h}시 – ${h + 1}시`,
+      lineAria: '시간대별 일평균 주문 차트. 좌우 방향키로 시간대를 옮길 수 있습니다.',
+      ringAria: '카테고리별 주문 비중 차트',
+      tone: { good: '개선', bad: '악화', flat: '변동 없음' },
+      deltaAria: (t, tone) => `직전 30일 대비 ${t}, ${tone}`,
+      footer: '가상 데이터로 구성한 샘플 화면입니다.'
+    },
+    en: {
+      docTitle: 'Order Analytics Dashboard · Sample',
+      nav: ['Home', 'Order Analytics', 'Products', 'Customers', 'Promotions', 'Inventory', 'Settlements', 'Activity Log'],
+      menu: 'Menu', search: 'Search', notifications: 'Notifications', profile: 'Account',
+      pageTitle: 'Order Analytics', tablist: 'Sales channel',
+      tabs: { all: 'All channels', web: 'Web store', app: 'App', market: 'Marketplaces', live: 'Live commerce' },
+      section: 'Order stats', period: 'Last 30 days · vs. previous 30 days',
+      kpi: { rev: 'Revenue', ord: 'Orders', cxl: 'Cancel & return rate', aov: 'Avg. order value' },
+      lineTitle: 'Orders by hour', lineSub: 'daily average', wd: 'Weekdays', we: 'Weekends',
+      ringTitle: 'Orders by category', total: 'Total orders', cats: ['Fashion', 'Beauty', 'Food', 'Other'],
+      unitCount: '', hourHead: 'Hour', catHead: 'Category', ordHead: 'Orders', shareHead: 'Share',
+      hourTick: h => fmt12(h),
+      hourRange: h => `${fmt12(h)} – ${fmt12((h + 1) % 24)}`,
+      lineAria: 'Average orders per day by hour. Use the left and right arrow keys to move between hours.',
+      ringAria: 'Share of orders by category',
+      tone: { good: 'improved', bad: 'worsened', flat: 'no change' },
+      deltaAria: (t, tone) => `${t} vs. previous 30 days, ${tone}`,
+      footer: 'Sample screen built with fictional data.'
+    }
+  };
+
+  const state = { lang: new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'ko', ch: 'all' };
+  const S = () => STR[state.lang];
+  const pick = (obj, path) => path.split('.').reduce((o, k) => (o == null ? o : o[k]), obj);
+
+  /* ================= 숫자 표기 ================= */
+  const nf = n => Math.round(n).toLocaleString('en-US');
+  const fmt = {
+    revenue(v, lang) {
+      if (lang === 'ko') return v >= 1e8 ? [{ t: (v / 1e8).toFixed(2) }, { t: '억', u: 1 }] : [{ t: nf(v / 1e4) }, { t: '만', u: 1 }];
+      const m = v / 1e6;
+      return [{ t: '₩', u: 1, pre: 1 }, { t: m >= 100 ? m.toFixed(0) : m.toFixed(1) }, { t: 'M', u: 1 }];
+    },
+    count: (v, lang) => lang === 'ko' ? [{ t: nf(v) }, { t: '건', u: 1 }] : [{ t: nf(v) }],
+    rate: v => [{ t: (v * 100).toFixed(1) }, { t: '%', u: 1 }],
+    won(v, lang) {
+      const r = Math.round(v / 10) * 10;
+      return lang === 'ko' ? [{ t: nf(r) }, { t: '원', u: 1 }] : [{ t: '₩', u: 1, pre: 1 }, { t: nf(r) }];
+    }
+  };
+  function setParts(el, parts) {
+    el.textContent = '';
+    for (const p of parts) {
+      if (p.u) {
+        const s = document.createElement('span');
+        s.className = 'u' + (p.pre ? ' pre' : '');
+        s.textContent = p.t;
+        el.appendChild(s);
+      } else el.appendChild(document.createTextNode(p.t));
+    }
+  }
+
+  /* ================= KPI 카드 ================= */
+  const ICON = {
+    wallet: '<path d="M4 7.5h14.5a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-11a2 2 0 0 1 2-2H16"/><circle cx="16.4" cy="13.5" r="1.3" fill="currentColor" stroke="none"/>',
+    bag: '<path d="M5.2 8.2h13.6l-1 11.3a1.5 1.5 0 0 1-1.5 1.4H7.7a1.5 1.5 0 0 1-1.5-1.4z"/><path d="M9 8.2V7a3 3 0 0 1 6 0v1.2"/>',
+    ret: '<path d="M8.5 13.5 4 9l4.5-4.5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
+    tag: '<path d="M3.5 12.6V4.5a1 1 0 0 1 1-1h8.1l7.9 7.9a1 1 0 0 1 0 1.4l-7.7 7.7a1 1 0 0 1-1.4 0z"/><circle cx="8.3" cy="8.3" r="1.4"/>'
+  };
+  const ARROW = {
+    up: '<path d="M3.5 16.5l6-6 4 4 7-7"/><path d="M15 7.5h5.5V13"/>',
+    down: '<path d="M3.5 7.5l6 6 4-4 7 7"/><path d="M15 16.5h5.5V11"/>',
+    flat: '<path d="M4 12h16"/>'
+  };
+  // better: 값이 오를 때 좋은지(up) 내릴 때 좋은지(down) — 증감 화살표 색을 정한다
+  const KPIS = [
+    { id: 'rev', tone: 'blue',   icon: 'wallet', better: 'up',   kind: 'pct', cur: d => d.rev[0],             prev: d => d.rev[1],             f: fmt.revenue },
+    { id: 'ord', tone: 'green',  icon: 'bag',    better: 'up',   kind: 'pct', cur: d => d.ord[0],             prev: d => d.ord[1],             f: fmt.count },
+    { id: 'cxl', tone: 'orange', icon: 'ret',    better: 'down', kind: 'pp',  cur: d => d.cxl[0] / d.ord[0],  prev: d => d.cxl[1] / d.ord[1],  f: fmt.rate },
+    { id: 'aov', tone: 'dark',   icon: 'tag',    better: 'up',   kind: 'pct', cur: d => d.rev[0] / d.ord[0],  prev: d => d.rev[1] / d.ord[1],  f: fmt.won }
+  ];
+  const kpiEls = {};
+  for (const k of KPIS) {
+    const root = document.createElement('div');
+    root.className = `kpi kpi--${k.tone}`;
+    root.innerHTML =
+      `<svg class="kpi__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k.icon]}</svg>` +
+      '<div><div class="kpi__main"><span class="kpi__value"></span>' +
+      '<span class="delta" role="img"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg><span class="delta__txt" aria-hidden="true"></span></span>' +
+      '</div><div class="kpi__label"></div></div>';
+    $('#kpis').appendChild(root);
+    kpiEls[k.id] = { root, value: $('.kpi__value', root), delta: $('.delta', root), dIcon: $('.delta svg', root), dTxt: $('.delta__txt', root), label: $('.kpi__label', root) };
+  }
+  function computeDelta(k, d) {
+    const cur = k.cur(d), prev = k.prev(d);
+    const raw = k.kind === 'pct' ? (cur / prev - 1) * 100 : (cur - prev) * 100;
+    const v = Math.round(raw * 10) / 10;
+    const dir = v > 0 ? 'up' : v < 0 ? 'down' : 'flat';
+    const unit = k.kind === 'pct' ? '%' : (state.lang === 'ko' ? '%p' : ' pp');
+    const txt = (v > 0 ? '+' : v < 0 ? MINUS : '') + Math.abs(v).toFixed(1) + unit;
+    return { txt, dir, tone: dir === 'flat' ? 'flat' : dir === k.better ? 'good' : 'bad' };
+  }
+  function renderKpis(animate) {
+    const d = DATA[state.ch];
+    for (const k of KPIS) {
+      const el = kpiEls[k.id];
+      const apply = () => {
+        setParts(el.value, k.f(k.cur(d), state.lang));
+        const dl = computeDelta(k, d);
+        el.delta.className = 'delta is-' + dl.tone;
+        el.dIcon.innerHTML = ARROW[dl.dir];
+        el.dTxt.textContent = dl.txt;
+        el.delta.setAttribute('aria-label', S().deltaAria(dl.txt, S().tone[dl.tone]));
+        el.label.textContent = S().kpi[k.id];
+      };
+      if (animate && !REDUCE) {
+        el.root.classList.add('is-swap');
+        setTimeout(() => { apply(); el.root.classList.remove('is-swap'); }, 140);
+      } else apply();
+    }
+  }
+
+  /* ================= 시간대별 주문 (라인) ================= */
+  const M = { t: 12, r: 14, b: 30, l: 34 };
+  const seriesMax = d => Math.max(...d.wd, ...d.we);
+  const niceStep = raw => { const p = Math.pow(10, Math.floor(Math.log10(raw))), n = raw / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * p; };
+  const niceMax = max => { const s = niceStep(max / 5); return Math.ceil(max / s) * s; };
+  const peakIndex = d => { let bi = 0, bv = -1; for (let i = 0; i < 24; i++) { const v = Math.max(d.wd[i], d.we[i]); if (v > bv) { bv = v; bi = i; } } return bi; };
+
+  const LC = {
+    el: $('#lc'), svg: $('#lc svg'), tip: $('#lcTip'),
+    data: { wd: DATA.all.wd.slice(), we: DATA.all.we.slice() },
+    dom: niceMax(seriesMax(DATA.all) * 1.05), pinned: peakIndex(DATA.all), hover: null, w: 0, h: 0, raf: 0
+  };
+  const lx = i => M.l + i * (LC.w - M.l - M.r) / 23;
+  const ly = v => M.t + (1 - v / LC.dom) * (LC.h - M.t - M.b);
+
+  // 단조 3차 보간(d3.curveMonotoneX와 같은 방식) — 곡선이 실제 값 범위를 넘지 않는다
+  function monotonePath(P) {
+    const n = P.length, s = [], t = new Array(n);
+    for (let i = 0; i < n - 1; i++) s.push((P[i + 1][1] - P[i][1]) / (P[i + 1][0] - P[i][0]));
+    for (let i = 1; i < n - 1; i++) {
+      const h0 = P[i][0] - P[i - 1][0], h1 = P[i + 1][0] - P[i][0], p = (s[i - 1] * h1 + s[i] * h0) / (h0 + h1);
+      t[i] = (Math.sign(s[i - 1]) + Math.sign(s[i])) * Math.min(Math.abs(s[i - 1]), Math.abs(s[i]), .5 * Math.abs(p)) || 0;
+    }
+    t[0] = (3 * s[0] - t[1]) / 2;
+    t[n - 1] = (3 * s[n - 2] - t[n - 2]) / 2;
+    const f = v => v.toFixed(2);
+    let d = `M${f(P[0][0])},${f(P[0][1])}`;
+    for (let i = 0; i < n - 1; i++) {
+      const dx = (P[i + 1][0] - P[i][0]) / 3;
+      d += `C${f(P[i][0] + dx)},${f(P[i][1] + t[i] * dx)} ${f(P[i + 1][0] - dx)},${f(P[i + 1][1] - t[i + 1] * dx)} ${f(P[i + 1][0])},${f(P[i + 1][1])}`;
+    }
+    return d;
+  }
+
+  function drawLine() {
+    LC.w = LC.el.clientWidth; LC.h = LC.el.clientHeight;
+    if (!LC.w || !LC.h) return;
+    // 좁은 화면에서는 떠 있는 툴팁 대신 범례에 값을 표시해 곡선을 가리지 않는다
+    LC.el.closest('.card').classList.toggle('is-narrow', LC.w < 520);
+    const step = niceStep(LC.dom / 5), bottom = LC.h - M.b;
+    let g = '';
+    for (let v = 0; v <= LC.dom + 1e-6; v += step) {
+      const y = Math.round(ly(v)) + .5;
+      g += `<line x1="${M.l}" x2="${LC.w - M.r}" y1="${y}" y2="${y}" stroke="#EFEFEF"/>`;
+      g += `<text class="tick" x="${M.l - 10}" y="${y}" dy=".35em" text-anchor="end">${Math.round(v)}</text>`;
+    }
+    for (const i of [0, 4, 8, 12, 16, 20]) g += `<text class="xtick" data-i="${i}" x="${lx(i)}" y="${LC.h - 8}" text-anchor="middle">${S().hourTick(i)}</text>`;
+    g += `<text class="xtick is-active xhover" y="${LC.h - 8}" text-anchor="middle" visibility="hidden"></text>`;
+    const pts = arr => arr.map((v, i) => [lx(i), ly(v)]);
+    g += `<line class="xhair" y1="${M.t}" y2="${bottom}" stroke="${COLOR.ink}" stroke-width="1"/>`;
+    g += `<path class="ser ser-we" d="${monotonePath(pts(LC.data.we))}" fill="none" stroke="${COLOR.green}" stroke-width="2" stroke-dasharray="6 5"/>`;
+    g += `<path class="ser ser-wd" d="${monotonePath(pts(LC.data.wd))}" fill="none" stroke="${COLOR.ink}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    for (const i of [0, 23]) g += `<circle class="endpt" cx="${lx(i)}" cy="${ly(LC.data.wd[i])}" r="4.5" fill="#fff" stroke="${COLOR.ink}" stroke-width="2"/>`;
+    g += `<g class="focus"><circle class="fd-we" r="5" fill="${COLOR.green}" stroke="#fff" stroke-width="2"/><circle class="fd-wd" r="5" fill="${COLOR.ink}" stroke="#fff" stroke-width="2"/></g>`;
+    LC.svg.setAttribute('viewBox', `0 0 ${LC.w} ${LC.h}`);
+    LC.svg.innerHTML = g;
+    drawFocus();
+  }
+
+  function drawFocus() {
+    if (!LC.w) return;
+    const i = LC.hover != null ? LC.hover : LC.pinned, x = lx(i);
+    const xh = $('.xhair', LC.svg);
+    xh.setAttribute('x1', x); xh.setAttribute('x2', x);
+    const fwd = $('.fd-wd', LC.svg), fwe = $('.fd-we', LC.svg);
+    fwd.setAttribute('cx', x); fwd.setAttribute('cy', ly(LC.data.wd[i]));
+    fwe.setAttribute('cx', x); fwe.setAttribute('cy', ly(LC.data.we[i]));
+    let onTick = false;
+    for (const t of $$('.xtick[data-i]', LC.svg)) {
+      const ti = +t.dataset.i, on = ti === i;
+      if (on) onTick = true;
+      t.classList.toggle('is-active', on);
+      t.setAttribute('visibility', !on && Math.abs(lx(ti) - x) < 40 ? 'hidden' : 'visible');
+    }
+    const hov = $('.xhover', LC.svg);
+    if (onTick) hov.setAttribute('visibility', 'hidden');
+    else { hov.textContent = S().hourTick(i); hov.setAttribute('x', x); hov.setAttribute('visibility', 'visible'); }
+
+    const unit = S().unitCount;
+    $('.lc-tip__title', LC.tip).textContent = S().hourRange(i);
+    $('[data-v="wd"]', LC.tip).textContent = LC.data.wd[i].toFixed(1) + unit;
+    $('[data-v="we"]', LC.tip).textContent = LC.data.we[i].toFixed(1) + unit;
+    $('[data-lv="wd"]').textContent = LC.data.wd[i].toFixed(1) + unit;
+    $('[data-lv="we"]').textContent = LC.data.we[i].toFixed(1) + unit;
+    const tw = LC.tip.offsetWidth;
+    let left = x - tw - 12;
+    if (left < M.l) left = x + 12;
+    if (left + tw > LC.w) left = LC.w - tw;
+    LC.tip.style.transform = `translate(${Math.round(left)}px, ${M.t}px)`;
+  }
+
+  function hourAt(clientX) {
+    const r = LC.el.getBoundingClientRect();
+    const i = Math.round((clientX - r.left - M.l) / ((LC.w - M.l - M.r) / 23));
+    return Math.max(0, Math.min(23, i));
+  }
+  LC.el.addEventListener('pointermove', e => { const i = hourAt(e.clientX); if (i !== LC.hover) { LC.hover = i; drawFocus(); } });
+  LC.el.addEventListener('pointerdown', e => { LC.hover = hourAt(e.clientX); drawFocus(); });
+  LC.el.addEventListener('pointerup', e => { if (e.pointerType !== 'mouse' && LC.hover != null) LC.pinned = LC.hover; });
+  LC.el.addEventListener('pointerleave', () => { LC.hover = null; drawFocus(); });
+  LC.el.addEventListener('keydown', e => {
+    const moves = { ArrowLeft: -1, ArrowRight: 1 };
+    let i = LC.pinned;
+    if (e.key in moves) i = Math.max(0, Math.min(23, i + moves[e.key]));
+    else if (e.key === 'Home') i = 0;
+    else if (e.key === 'End') i = 23;
+    else return;
+    e.preventDefault();
+    LC.pinned = i; LC.hover = null; drawFocus();
+    $('#lcLive').textContent = `${S().hourRange(i)} · ${S().wd} ${LC.data.wd[i].toFixed(1)}${S().unitCount}, ${S().we} ${LC.data.we[i].toFixed(1)}${S().unitCount}`;
+  });
+  for (const b of $$('.legend button')) {
+    const on = () => LC.el.classList.add('emph-' + b.dataset.s), off = () => LC.el.classList.remove('emph-' + b.dataset.s);
+    b.addEventListener('mouseenter', on); b.addEventListener('mouseleave', off);
+    b.addEventListener('focus', on); b.addEventListener('blur', off);
+  }
+  new ResizeObserver(() => drawLine()).observe(LC.el);
+
+  function tweenLine(ch) {
+    const to = DATA[ch], from = { wd: LC.data.wd.slice(), we: LC.data.we.slice(), dom: LC.dom };
+    const toDom = niceMax(seriesMax(to) * 1.05);
+    LC.pinned = peakIndex(to); LC.hover = null;
+    cancelAnimationFrame(LC.raf);
+    if (REDUCE) { LC.data = { wd: to.wd.slice(), we: to.we.slice() }; LC.dom = toDom; drawLine(); return; }
+    const t0 = performance.now(), dur = 480;
+    const frame = now => {
+      const t = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - t, 3);
+      LC.data = { wd: from.wd.map((v, i) => v + (to.wd[i] - v) * e), we: from.we.map((v, i) => v + (to.we[i] - v) * e) };
+      LC.dom = from.dom + (toDom - from.dom) * e;
+      drawLine();
+      if (t < 1) LC.raf = requestAnimationFrame(frame);
+    };
+    LC.raf = requestAnimationFrame(frame);
+  }
+
+  /* ================= 카테고리별 주문 (게이지형 도넛) ================= */
+  const RG = { el: $('#ring'), svg: $('#ring svg'), vals: DATA.all.cat.slice(), focus: null, raf: 0, cx: 120, cy: 112, r: 94, sw: 20, a0: -135, a1: 135, gap: 3 };
+  const pt = a => { const rad = a * Math.PI / 180; return [RG.cx + RG.r * Math.sin(rad), RG.cy - RG.r * Math.cos(rad)]; };
+  const arc = (a, b) => { const [x0, y0] = pt(a), [x1, y1] = pt(b); return `M${x0.toFixed(2)},${y0.toFixed(2)}A${RG.r},${RG.r} 0 ${b - a > 180 ? 1 : 0} 1 ${x1.toFixed(2)},${y1.toFixed(2)}`; };
+
+  function drawRing() {
+    const vals = RG.vals, total = vals.reduce((p, c) => p + c, 0), n = vals.length;
+    const sweep = (RG.a1 - RG.a0) - RG.gap * (n - 1);
+    let a = RG.a0, segs = '', hits = '';
+    vals.forEach((v, i) => {
+      const b = a + (total ? v / total * sweep : 0);
+      // 양 끝만 둥글게: 첫·마지막 조각에 원을 덧대고, 흐림 효과가 겹쳐 진해지지 않도록 그룹 단위로 투명도를 준다
+      let cap = '';
+      if (i === 0) { const [x, y] = pt(a); cap += `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${RG.sw / 2}" fill="${COLOR.cats[i]}"/>`; }
+      if (i === n - 1) { const [x, y] = pt(b); cap += `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${RG.sw / 2}" fill="${COLOR.cats[i]}"/>`; }
+      segs += `<g class="seg" data-i="${i}"><path d="${arc(a, b)}" fill="none" stroke="${COLOR.cats[i]}" stroke-width="${RG.sw}"/>${cap}</g>`;
+      hits += `<path class="hit" data-i="${i}" d="${arc(a, b)}" fill="none" stroke="transparent" stroke-width="${RG.sw + 16}" style="pointer-events:stroke"/>`;
+      a = b + RG.gap;
+    });
+    RG.svg.innerHTML = segs + hits;
+    applyRingFocus();
+  }
+  function applyRingFocus() {
+    const i = RG.focus;
+    RG.el.classList.toggle('has-focus', i != null);
+    for (const s of $$('.seg', RG.svg)) s.classList.toggle('is-on', +s.dataset.i === i);
+    const lg = $('#catLegend');
+    lg.classList.toggle('has-focus', i != null);
+    $$('li', lg).forEach((li, j) => li.classList.toggle('is-on', j === i));
+  }
+  function renderRingText() {
+    const d = DATA[state.ch], total = d.cat.reduce((p, c) => p + c, 0);
+    if (RG.focus == null) {
+      $('#ringLabel').textContent = S().total;
+      setParts($('#ringValue'), fmt.count(total, state.lang));
+    } else {
+      $('#ringLabel').textContent = S().cats[RG.focus];
+      setParts($('#ringValue'), fmt.rate(d.cat[RG.focus] / total));
+    }
+  }
+  function setRingFocus(i) {
+    if (RG.focus === i) return;
+    RG.focus = i; applyRingFocus(); renderRingText();
+  }
+  // 범례
+  const legendItems = COLOR.cats.map((c, i) => {
+    const li = document.createElement('li');
+    li.innerHTML = '<button type="button"><span class="dot"></span><span class="name"></span><span class="val"></span></button>';
+    $('.dot', li).style.background = c;
+    const b = $('button', li);
+    b.addEventListener('mouseenter', () => setRingFocus(i));
+    b.addEventListener('mouseleave', () => setRingFocus(null));
+    b.addEventListener('focus', () => setRingFocus(i));
+    b.addEventListener('blur', () => setRingFocus(null));
+    $('#catLegend').appendChild(li);
+    return { name: $('.name', li), val: $('.val', li) };
+  });
+  function renderLegend() {
+    const d = DATA[state.ch], total = d.cat.reduce((p, c) => p + c, 0);
+    legendItems.forEach((it, i) => {
+      it.name.textContent = S().cats[i];
+      it.val.textContent = `${nf(d.cat[i])}${S().unitCount} (${(d.cat[i] / total * 100).toFixed(1)}%)`;
+    });
+  }
+  RG.svg.addEventListener('pointerover', e => { const h = e.target.closest('.hit'); if (h) setRingFocus(+h.dataset.i); });
+  RG.svg.addEventListener('pointerleave', () => setRingFocus(null));
+
+  function tweenRing(ch) {
+    const to = DATA[ch].cat, from = RG.vals.slice();
+    cancelAnimationFrame(RG.raf);
+    if (REDUCE) { RG.vals = to.slice(); drawRing(); return; }
+    const t0 = performance.now(), dur = 480;
+    const frame = now => {
+      const t = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - t, 3);
+      RG.vals = from.map((v, i) => v + (to[i] - v) * e);
+      drawRing();
+      if (t < 1) RG.raf = requestAnimationFrame(frame);
+    };
+    RG.raf = requestAnimationFrame(frame);
+  }
+
+  /* ================= 스크린 리더용 표 ================= */
+  function table(caption, head, rows) {
+    const t = document.createElement('table'), cap = document.createElement('caption');
+    cap.textContent = caption; t.appendChild(cap);
+    const tr = document.createElement('tr');
+    for (const h of head) { const th = document.createElement('th'); th.scope = 'col'; th.textContent = h; tr.appendChild(th); }
+    const thead = document.createElement('thead'); thead.appendChild(tr); t.appendChild(thead);
+    const tb = document.createElement('tbody');
+    for (const r of rows) {
+      const row = document.createElement('tr');
+      r.forEach((c, j) => { const cell = document.createElement(j ? 'td' : 'th'); if (!j) cell.scope = 'row'; cell.textContent = c; row.appendChild(cell); });
+      tb.appendChild(row);
+    }
+    t.appendChild(tb);
+    return t;
+  }
+  function renderTables() {
+    const d = DATA[state.ch], s = S(), total = d.cat.reduce((p, c) => p + c, 0);
+    $('#lcTable').replaceChildren(table(`${s.lineTitle} (${s.lineSub}) · ${s.tabs[state.ch]}`, [s.hourHead, s.wd, s.we],
+      d.wd.map((v, i) => [s.hourRange(i), v.toFixed(1), d.we[i].toFixed(1)])));
+    $('#ringTable').replaceChildren(table(`${s.ringTitle} · ${s.tabs[state.ch]}`, [s.catHead, s.ordHead, s.shareHead],
+      d.cat.map((v, i) => [s.cats[i], nf(v), (v / total * 100).toFixed(1) + '%'])));
+  }
+
+  /* ================= 채널 탭 ================= */
+  const tabsEl = $('#tabs');
+  for (const ch of CHANNELS) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'tab'; b.id = 'tab-' + ch; b.dataset.ch = ch;
+    b.setAttribute('role', 'tab'); b.setAttribute('aria-controls', 'panel');
+    b.addEventListener('click', () => selectChannel(ch));
+    tabsEl.appendChild(b);
+  }
+  function syncTabs() {
+    for (const b of $$('.tab', tabsEl)) {
+      const on = b.dataset.ch === state.ch;
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+      b.tabIndex = on ? 0 : -1;
+    }
+    $('#panel').setAttribute('aria-labelledby', 'tab-' + state.ch);
+  }
+  tabsEl.addEventListener('keydown', e => {
+    const idx = CHANNELS.indexOf(state.ch);
+    const next = { ArrowRight: idx + 1, ArrowLeft: idx - 1, Home: 0, End: CHANNELS.length - 1 }[e.key];
+    if (next == null) return;
+    e.preventDefault();
+    const ch = CHANNELS[(next + CHANNELS.length) % CHANNELS.length];
+    selectChannel(ch);
+    $('#tab-' + ch).focus();
+  });
+  function selectChannel(ch) {
+    if (ch === state.ch) return;
+    state.ch = ch;
+    syncTabs();
+    renderKpis(true);
+    tweenLine(ch);
+    RG.focus = null;
+    tweenRing(ch);
+    renderRingText();
+    renderLegend();
+    renderTables();
+  }
+
+  /* ================= 언어 ================= */
+  function applyStatic() {
+    const s = S();
+    document.documentElement.lang = state.lang;
+    document.title = s.docTitle;
+    for (const el of $$('[data-i18n]')) el.textContent = pick(s, el.dataset.i18n);
+    for (const el of $$('[data-i18n-aria]')) el.setAttribute('aria-label', pick(s, el.dataset.i18nAria));
+    for (const b of $$('.tab', tabsEl)) b.textContent = s.tabs[b.dataset.ch];
+    tabsEl.setAttribute('aria-label', s.tablist);
+    LC.el.setAttribute('aria-label', s.lineAria);
+    RG.svg.setAttribute('aria-label', s.ringAria);
+    for (const b of $$('.lang button')) b.setAttribute('aria-pressed', b.dataset.lang === state.lang ? 'true' : 'false');
+  }
+  function setLang(lang) {
+    state.lang = lang;
+    applyStatic();
+    renderKpis(false);
+    drawLine();
+    renderRingText();
+    renderLegend();
+    renderTables();
+  }
+  for (const b of $$('.lang button')) b.addEventListener('click', () => { if (b.dataset.lang !== state.lang) setLang(b.dataset.lang); });
+
+  /* ================= 기타 ================= */
+  for (const a of $$('.nav a')) a.addEventListener('click', e => e.preventDefault());
+  $('#menuBtn').addEventListener('click', () => {
+    const open = $('#sidebar').classList.toggle('is-open');
+    $('#menuBtn').setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+
+  syncTabs();
+  drawRing();
+  setLang(state.lang);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => drawLine());
+})();
+</script>
+</body>
+</html>
