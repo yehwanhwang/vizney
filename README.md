@@ -15,7 +15,7 @@ Static files served at **https://git.vizney.com** (GitHub Pages, `main` branch).
 
 | Folder | Contents |
 |---|---|
-| `gallery/` | Standalone HTML dashboards shown in the Vizney blog gallery, one folder per screen |
+| `gallery/` | Dashboard styles shown in the Vizney blog gallery (one folder per style), plus recreations of Tableau Public dashboards |
 | `lib/` | Shared helpers for gallery pages (`embed.js`, `embed-host.js`) |
 | `country-flag-icons/` | Flag images loaded by URL from Tableau workbooks. **These paths are public: never move or rename them.** |
 | `tableau-to-html/v1/` | Redirects to `gallery/superstore-executive/` so existing links keep working |
@@ -25,18 +25,31 @@ Everything pushed to `main` is published immediately. Keep work in progress off 
 
 ## Gallery
 
-| Folder | Screen | Based on | Blog posts |
+### Styles
+
+A style is a look and feel, not a dataset. The sample data only shows the style at work.
+
+| Folder | Style | Feel | Sample data | Blog posts |
+|---|---|---|---|---|
+| [`chalk`](https://git.vizney.com/gallery/chalk/) | Vizney Chalk (초크) · [style.md](gallery/chalk/style.md) | Dark sidebar, pastel KPI tiles | Online store orders (fictional) | Not yet published |
+
+### Recreations
+
+Rebuilds of someone else's dashboard. They keep the original's name and credit its author instead of getting a style name.
+
+| Folder | Screen | Original | Blog posts |
 |---|---|---|---|
-| [`order-analytics`](https://git.vizney.com/gallery/order-analytics/) | Order analytics dashboard (fictional data) | UI style reference only; layout, data and copy are original | Not yet published |
 | [`superstore-executive`](https://git.vizney.com/gallery/superstore-executive/) | Superstore Executive Dashboard | [Superstore Dashboard by P. Padham](https://public.tableau.com/app/profile/p.padham/viz/SuperstoreDashboard_16709573699130/SuperstoreDashboard) (Tableau Public) | [KO](https://kr.vizney.com/recreating-tableau-public-dashboards-in-html/) · [EN](https://www.vizney.com/recreating-tableau-public-dashboards-in-html/) |
 
 
-## Adding a screen
+## Adding a style
 
-1. Save the page as `gallery/<folder>/index.html`. Name the folder after the screen's topic in lowercase English with hyphens (`order-analytics`). Leave versions, languages and reference sources out of the name.
-2. Update a screen in place; Git history keeps the old versions. A completely different screen gets a new folder.
-3. Keep Korean and English in the same file, switched with `?lang=ko` / `?lang=en`.
-4. Keep each page self-contained (data included). Add these lines to `<head>`:
+1. Name the style with one evocative material or texture word (Chalk, Glass, Linen …) and call it "Vizney <Name>". The folder is the name in lowercase: `gallery/chalk/`. Never name a folder after its sample data.
+2. Give it a one-line subtitle that says what it looks like ("Dark sidebar, pastel KPI tiles"). The name is for remembering; the subtitle is for first-time readers and search.
+3. Put two files in the folder:
+   - `index.html`: the sample screen, self-contained (data included), Korean and English in one file via `?lang=ko` / `?lang=en`.
+   - `style.md`: layout, colors, type, components, motion and don'ts, detailed enough to rebuild the style from its name. It is published at `gallery/<name>/style.html`.
+4. Add these lines to the page's `<head>`:
 
    ```html
    <meta name="robots" content="noindex">
@@ -47,7 +60,8 @@ Everything pushed to `main` is published immediately. Keep work in progress off 
    `noindex` keeps search traffic on the blog post instead of the bare screen.
 5. In embed mode `<html>` gets the class `vz-embed`. Reset any viewport-height layout there (for example `html.vz-embed .app { min-height: 0 }`) and hide page-only notes.
 6. Optional: `cover-ko.png` / `cover-en.png` (1440×810 at 2×) for the post's feature image.
-7. Add a row to the Gallery table above.
+7. If the style closely follows a specific design, credit it in `style.md` and in the blog post.
+8. Update in place; Git history keeps the old versions. Add a row to the Styles table.
 
 
 ## Embedding in a Ghost post
@@ -56,8 +70,8 @@ Paste into an HTML card and change the folder, language and title:
 
 ```html
 <figure class="kg-card kg-embed-card kg-width-wide">
-  <iframe data-vizney-embed src="https://git.vizney.com/gallery/order-analytics/?lang=ko&amp;embed=1" title="주문 분석 대시보드" loading="lazy" style="display:block;width:100%;height:820px;border:1px solid #e6e6e6;border-radius:12px"></iframe>
-  <figcaption><a href="https://git.vizney.com/gallery/order-analytics/?lang=ko" target="_blank" rel="noopener">전체 화면으로 보기 ↗</a></figcaption>
+  <iframe data-vizney-embed src="https://git.vizney.com/gallery/chalk/?lang=ko&amp;embed=1" title="Vizney Chalk 스타일 대시보드" loading="lazy" style="display:block;width:100%;height:820px;border:1px solid #e6e6e6;border-radius:12px"></iframe>
+  <figcaption><a href="https://git.vizney.com/gallery/chalk/?lang=ko" target="_blank" rel="noopener">전체 화면으로 보기 ↗</a></figcaption>
 </figure>
 <script src="https://git.vizney.com/lib/embed-host.js" defer></script>
 ```
