@@ -18,9 +18,8 @@ Static files served at **https://git.vizney.com** (GitHub Pages, `main` branch).
 | `gallery/` | Recreations of other people's dashboards shown in the Vizney blog gallery, one folder per screen |
 | `lib/` | Embed helpers for those pages (`embed.js`, `embed-host.js`) |
 | `country-flag-icons/` | Flag images loaded by URL from Tableau workbooks. **These paths are public: never move or rename them.** |
-| `tableau-to-html/v1/` | Redirects to `gallery/superstore-executive/` so existing links keep working |
 
-Named dashboard styles such as Chalk live in [Vizney Styles](https://styles.vizney.com) ([repository](https://github.com/yehwanhwang/vizney-styles)). `gallery/chalk/` only redirects there.
+Named dashboard styles such as Chalk live in [Vizney Styles](https://styles.vizney.com) ([repository](https://github.com/yehwanhwang/vizney-styles)).
 
 Everything pushed to `main` is published immediately. Keep work in progress off `main`.
 
