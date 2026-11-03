@@ -16,6 +16,7 @@ Static files served at **https://git.vizney.com** (GitHub Pages, `main` branch).
 | Folder | Contents |
 |---|---|
 | `country-flag-icons/` | Flag images loaded by URL from Tableau workbooks. **These paths are public: never move or rename them.** |
+| `home/` | The blog home screen, loaded by the Ghost "Home" page. See [home/README.md](home/README.md). **These paths are public: never move or rename them.** |
 
 Named dashboard styles such as Chalk live in [Vizney Styles](https://styles.vizney.com) ([repository](https://github.com/yehwanhwang/vizney-styles)).
 
