@@ -37,7 +37,7 @@
   color: #ffffff; padding: 96px 20px 112px; text-align: center;
 }
 #vizney-home .vz-hero-in { max-width: 760px; margin: 0 auto; }
-#vizney-home .vz-hero h1 { font-size: 56px; line-height: 1.2; font-weight: 700; letter-spacing: -0.02em; color: #ffffff; }
+#vizney-home .vz-hero h1 { font-size: 56px; line-height: 1.2; font-weight: 700; letter-spacing: -0.02em; color: #ffffff; text-wrap: balance; }
 #vizney-home .vz-lead { margin-top: 24px; font-size: 20px; line-height: 1.7; color: #d4d4d4; }
 #vizney-home .vz-meta { margin-top: 16px; font-size: 15px; line-height: 1.6; color: #a3a3a3; }
 #vizney-home .vz-actions { margin-top: 40px; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
@@ -53,7 +53,7 @@
 #vizney-home .vz-card .vz-label { margin-top: 20px; }
 #vizney-home .vz-title { margin-top: 6px; font-size: 22px; line-height: 1.4; font-weight: 700; }
 #vizney-home .vz-card .vz-desc { margin-top: 10px; }
-#vizney-home .vz-card .vz-more { margin-top: 16px; }
+#vizney-home .vz-card .vz-more { margin-top: auto; padding-top: 16px; }
 
 /* Featured posts (filled from /featured/rss/ by home.js) */
 #vizney-home .vz-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; }
@@ -99,6 +99,7 @@
   #vizney-home .vz-hero { padding: 56px 20px 72px; text-align: left; }
   #vizney-home .vz-hero h1 { font-size: 36px; line-height: 1.25; }
   #vizney-home .vz-lead { margin-top: 20px; font-size: 17px; }
+  #vizney-home .vz-br-wide { display: none; }
   #vizney-home .vz-meta { font-size: 14px; }
   #vizney-home .vz-actions { margin-top: 32px; flex-direction: column; gap: 10px; }
   #vizney-home .vz-actions .vz-btn { width: 100%; }
