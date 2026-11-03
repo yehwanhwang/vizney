@@ -1,20 +1,20 @@
-/* Vizney blog home (kr.vizney.com, www.vizney.com).
-   The Ghost "Home" page holds only <div id="vizney-home" data-lang="ko"> and this script.
-   It loads home.<lang>.html from git.vizney.com into that div, then fills the featured list
-   from the blog's /featured/rss/ (posts marked Featured in Ghost). If the feed cannot be read,
-   the six posts written in home.<lang>.html stay as they are. */
+/* Vizney blog home. www.vizney.com is English and kr.vizney.com is Korean, and the files follow the
+   same pattern: home.html is the English home, home.kr.html the Korean one.
+   The Ghost "Home" page holds only <div id="vizney-home" data-lang="en|ko"> and this script.
+   It loads the matching file from git.vizney.com into that div, then fills the featured list from
+   the blog's /featured/rss/ (Featured posts whose primary tag is Tips & Tricks or Knowledge Base,
+   as set in routes.yaml). If the feed cannot be read, the six posts written in the file stay. */
 (function () {
   var root = document.getElementById('vizney-home');
   if (!root || !window.fetch) return;
 
   var base = 'https://git.vizney.com/home/';
-  var lang = root.getAttribute('data-lang') === 'en' ? 'en' : 'ko';
-  var fallback = {
-    ko: '<p class="vz-fallback"><a href="/blog/">전체 글 보기</a> · <a href="/contact-us/">작업 문의</a></p>',
-    en: '<p class="vz-fallback"><a href="/blog/">All posts</a> · <a href="/contact-us/">Contact</a></p>'
-  };
+  var kr = /^(ko|kr)$/.test(root.getAttribute('data-lang') || '');
+  var fallback = kr
+    ? '<p class="vz-fallback"><a href="/blog/">전체 글 보기</a> · <a href="/contact-us/">작업 문의</a></p>'
+    : '<p class="vz-fallback"><a href="/blog/">All posts</a> · <a href="/contact-us/">Contact</a></p>';
 
-  fetch(base + 'home.' + lang + '.html', { cache: 'no-cache' })
+  fetch(base + (kr ? 'home.kr.html' : 'home.html'), { cache: 'no-cache' })
     .then(function (r) { return r.ok ? r.text() : Promise.reject(r.status); })
     .then(function (html) {
       root.innerHTML = html;
@@ -26,7 +26,7 @@
       fillFeatured(root.querySelector('[data-featured]'));
     })
     .catch(function () {
-      root.innerHTML = fallback[lang];
+      root.innerHTML = fallback;
       root.setAttribute('data-ready', '');
     });
 
