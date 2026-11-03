@@ -1,0 +1,120 @@
+/* Vizney blog home (kr.vizney.com, www.vizney.com).
+   Loaded only by the Ghost "Home" page's HTML card, so the page-level rules below touch that page alone.
+   Everything inside the page is scoped to #vizney-home; the id outranks the Casper theme's .gh-content rules. */
+
+/* Ghost page frame: no title block, no article padding, content edge to edge */
+.article { padding: 0 !important; }
+.article-header { display: none !important; }
+.site-main { padding-top: 0 !important; padding-bottom: 0 !important; }
+.site-footer { margin-top: 0 !important; }
+.gh-content > #vizney-home { grid-column: 1 / -1; margin: 0 !important; max-width: none; }
+
+/* While home.ko.html loads, hold the hero's space so the footer does not jump */
+#vizney-home:not([data-ready]) { min-height: 560px; background: #1b1b1b; }
+
+#vizney-home { color: #1b1b1b; font-size: 16px; line-height: 1.7; word-break: keep-all; }
+#vizney-home * { box-sizing: border-box; }
+#vizney-home h1, #vizney-home h2, #vizney-home h3, #vizney-home p { margin: 0; letter-spacing: normal; font-family: inherit; }
+#vizney-home a { color: inherit; text-decoration: none; box-shadow: none; }
+#vizney-home img { display: block; width: 100%; height: auto; margin: 0; border-radius: 8px; object-fit: cover; }
+
+#vizney-home .vz-in { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+#vizney-home .vz-sec { padding: 96px 0; }
+#vizney-home .vz-sec-top0 { padding-top: 0; }
+#vizney-home .vz-gray { background: #f5f5f5; }
+#vizney-home h2 { font-size: 32px; line-height: 1.3; font-weight: 700; }
+#vizney-home .vz-sub { margin-top: 12px; font-size: 17px; line-height: 1.7; color: #4a4a4a; }
+#vizney-home .vz-label { display: block; font-size: 13px; font-weight: 700; line-height: 1.5; color: #737373; }
+#vizney-home .vz-desc { display: block; font-size: 16px; line-height: 1.7; color: #4a4a4a; }
+#vizney-home .vz-more { font-size: 15px; font-weight: 700; }
+
+/* Hero: one soft accent glow from the bottom, a little light at the top right */
+#vizney-home .vz-hero {
+  background:
+    radial-gradient(ellipse 60% 85% at 50% 125%, rgba(255, 204, 0, 0.2) 0%, rgba(255, 204, 0, 0) 70%),
+    radial-gradient(ellipse 45% 60% at 85% -10%, #3a3a3a 0%, rgba(27, 27, 27, 0) 70%),
+    #1b1b1b;
+  color: #ffffff; padding: 96px 20px 112px; text-align: center;
+}
+#vizney-home .vz-hero-in { max-width: 760px; margin: 0 auto; }
+#vizney-home .vz-hero h1 { font-size: 56px; line-height: 1.2; font-weight: 700; letter-spacing: -0.02em; color: #ffffff; }
+#vizney-home .vz-lead { margin-top: 24px; font-size: 20px; line-height: 1.7; color: #d4d4d4; }
+#vizney-home .vz-meta { margin-top: 16px; font-size: 15px; line-height: 1.6; color: #a3a3a3; }
+#vizney-home .vz-actions { margin-top: 40px; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+#vizney-home .vz-btn { height: 48px; padding: 0 24px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 16px; font-weight: 700; }
+#vizney-home .vz-btn-accent { background: #ffcc00; color: #1b1b1b; }
+#vizney-home .vz-btn-line { border: 1px solid rgba(255, 255, 255, 0.4); color: #ffffff; font-weight: 500; }
+#vizney-home .vz-btn-dark { background: #1b1b1b; color: #ffffff; }
+
+/* Open standards: Chart Guide, Blocks, Styles */
+#vizney-home .vz-cards { margin-top: 40px; display: flex; flex-wrap: wrap; gap: 24px; }
+#vizney-home .vz-card { flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; }
+#vizney-home .vz-card img { aspect-ratio: 3 / 2; }
+#vizney-home .vz-card .vz-label { margin-top: 20px; }
+#vizney-home .vz-title { margin-top: 6px; font-size: 22px; line-height: 1.4; font-weight: 700; }
+#vizney-home .vz-card .vz-desc { margin-top: 10px; }
+#vizney-home .vz-card .vz-more { margin-top: 16px; }
+
+/* Featured posts (filled from /featured/rss/ by home.js) */
+#vizney-home .vz-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; }
+#vizney-home .vz-posts { margin-top: 32px; display: flex; flex-wrap: wrap; column-gap: 32px; }
+#vizney-home .vz-post { flex: 1 1 320px; min-width: 0; padding: 24px 0 28px; border-top: 1px solid #e3e3e3; display: flex; flex-direction: column; }
+#vizney-home .vz-post-title { margin-top: 8px; font-size: 18px; line-height: 1.5; font-weight: 700; }
+
+/* Services */
+#vizney-home .vz-box { background: #ffffff; border: 1px solid #dddddd; border-radius: 12px; padding: 32px 40px 36px; display: flex; flex-direction: column; }
+#vizney-home .vz-feature { margin-top: 40px; padding: 40px; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 48px; }
+#vizney-home .vz-feature-text { flex: 1 1 360px; min-width: 0; }
+#vizney-home .vz-num { display: block; font-size: 14px; font-weight: 700; color: #737373; }
+#vizney-home h3 { margin-top: 8px; font-size: 22px; line-height: 1.4; font-weight: 700; }
+#vizney-home .vz-h3-lg { font-size: 26px; }
+#vizney-home .vz-statement { margin-top: 20px; font-size: 20px; line-height: 1.6; font-weight: 700; }
+#vizney-home .vz-feature-text .vz-desc { margin-top: 14px; }
+#vizney-home .vz-case { flex: 1.3 1 420px; min-width: 0; display: flex; flex-direction: column; }
+#vizney-home .vz-case img { aspect-ratio: 2 / 1; object-position: top; }
+#vizney-home .vz-case .vz-label { margin-top: 16px; }
+#vizney-home .vz-case-title { margin-top: 4px; font-size: 18px; line-height: 1.5; font-weight: 700; }
+#vizney-home .vz-case .vz-desc { margin-top: 6px; font-size: 15px; }
+#vizney-home .vz-pair { margin-top: 24px; display: flex; flex-wrap: wrap; gap: 24px; }
+#vizney-home .vz-pair .vz-box { flex: 1 1 360px; min-width: 0; }
+#vizney-home .vz-pair .vz-desc { margin-top: 12px; }
+#vizney-home .vz-rel { margin-top: 20px; font-size: 15px; line-height: 1.6; }
+#vizney-home .vz-rel .vz-label { margin-bottom: 4px; }
+
+/* Contact band */
+#vizney-home .vz-cta { background: #ffcc00; padding: 72px 20px; text-align: center; }
+#vizney-home .vz-cta-in { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
+#vizney-home .vz-cta h2 { font-size: 30px; line-height: 1.4; }
+#vizney-home .vz-cta p { margin-top: 14px; font-size: 17px; line-height: 1.7; }
+#vizney-home .vz-cta .vz-btn { margin-top: 32px; padding: 0 28px; }
+
+#vizney-home .vz-fallback { max-width: 1200px; margin: 0 auto; padding: 96px 20px; text-align: center; }
+
+/* Phones: the same 767px breakpoint the Casper theme uses for its header */
+@media (max-width: 767px) {
+  #vizney-home .vz-sec { padding: 64px 0; }
+  #vizney-home .vz-sec-top0 { padding-top: 0; }
+  #vizney-home h2 { font-size: 26px; line-height: 1.35; }
+  #vizney-home .vz-sub { font-size: 16px; }
+  #vizney-home .vz-hero { padding: 56px 20px 72px; text-align: left; }
+  #vizney-home .vz-hero h1 { font-size: 36px; line-height: 1.25; }
+  #vizney-home .vz-lead { margin-top: 20px; font-size: 17px; }
+  #vizney-home .vz-meta { font-size: 14px; }
+  #vizney-home .vz-actions { margin-top: 32px; flex-direction: column; gap: 10px; }
+  #vizney-home .vz-actions .vz-btn { width: 100%; }
+  #vizney-home .vz-cards { gap: 40px; }
+  #vizney-home .vz-title { font-size: 20px; }
+  #vizney-home .vz-desc { font-size: 15px; }
+  #vizney-home .vz-post { padding: 20px 0 22px; }
+  #vizney-home .vz-post-title { font-size: 17px; }
+  #vizney-home .vz-box, #vizney-home .vz-feature { padding: 24px; }
+  #vizney-home .vz-feature { gap: 24px; }
+  #vizney-home .vz-h3-lg { font-size: 22px; }
+  #vizney-home .vz-statement { font-size: 18px; }
+  #vizney-home .vz-pair { margin-top: 16px; gap: 16px; }
+  #vizney-home .vz-cta { padding: 56px 20px; text-align: left; }
+  #vizney-home .vz-cta-in { align-items: stretch; }
+  #vizney-home .vz-cta h2 { font-size: 24px; }
+  #vizney-home .vz-cta p { font-size: 16px; }
+  #vizney-home .vz-cta .vz-btn { width: 100%; margin-top: 28px; }
+}
