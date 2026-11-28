@@ -1,0 +1,31 @@
+<p>When you connect Tableau MCP to Claude, Claude can query only what the signed-in Tableau user is allowed to see. But anything it retrieves, such as rows and view data, enters the Claude conversation as a tool result. From that point on, Claude's retention policy and admin settings apply, not Tableau permissions.</p>
+<p>Testing each tool on Tableau Cloud's hosted MCP server (mcp.tableau.com) showed that metadata calls carry no sample values but do include calculation formulas and parameter value lists, and that even a failed query can return real values in its error message. For setup, see <a href="https://www.vizney.com/connect-tableau-cloud-mcp-to-claude/">How to Connect Claude to Tableau Cloud</a>.</p>
+<hr>
+<h3>1. What does each Tableau MCP tool send to Claude?</h3>
+<p>Whatever a tool returns is what enters the Claude conversation. Using a site administrator account against the Superstore sample data, the tools returned the following.</p>
+<figure class="kg-card kg-image-card"><img src="{{IMG1}}" alt="Excerpts from Tableau MCP tool responses. The metadata response includes the formula SUM([Profit])/SUM([Sales]), the filter error message suggests the real customer name Aaron Hawkins, and the view image response contains a download link that expires after 60 seconds."></figure>
+<ul>
+<li><strong>Metadata (<code>get-datasource-metadata</code>):</strong> Field names and data types, relationships between logical tables (join keys), calculation formulas such as <code>SUM([Profit])/SUM([Sales])</code>, and each parameter's current value and range. No sample field values were included. List parameters, however, arrive with their full list of allowed values, and parameter details were returned even when only one field was requested.</li>
+<li><strong>Data source queries (<code>query-datasource</code>):</strong> Aggregated results come back row by row, and row-level values such as order IDs, customer names, and cities are returned as-is when the question asks for them.</li>
+<li><strong>View data (<code>get-view-data</code>):</strong> Returns the summary data of a dashboard's first sheet as CSV. The tool has no row-limit argument, and the tested dashboard returned more than 400 rows in a single response, formatted as displayed, with currency symbols and thousands separators.</li>
+<li><strong>View images (<code>get-view-image</code>) and workbook files (<code>download-workbook</code>):</strong> The file is uploaded to Tableau's S3 storage, and the response contains only a download link that expires after 60 seconds. If Claude can open that link (this depends on its code execution network settings), the file lands in Claude's code execution environment, and once Claude reads the image, the dashboard's KPI figures enter the conversation. If the link is never opened, only an expired URL remains.</li>
+<li><strong>Listing tools (<code>list-workbooks</code> and others):</strong> Content names and descriptions, and in the workbook list, owners' usernames in email format.</li>
+</ul>
+<p>Failed calls can carry data as well. Filtering on a customer name that doesn't exist made the query fail, but the error message suggested a real customer name:</p>
+<blockquote>Filter validation failed for field "Customer Name". The following values were not found: Aron Hawkins. Did you mean: Aaron Hawkins?</blockquote>
+<p>Allowing only the metadata tool still sends formulas and parameter value lists. Data sources that keep customer or account names in a list parameter are worth reviewing before you connect them.</p>
+<hr>
+<h3>2. What determines what Claude can see?</h3>
+<p>The scope is set by the site role and permissions of the Tableau account that signs in. <a href="https://tableau.github.io/tableau-mcp/docs/hosted-tableau-mcp">Hosted MCP</a> runs every tool call as that user; data sources the user can't access are refused with a 403 error, and the response contains no data. Even so, the permitted scope can be wider than expected.</p>
+<ul>
+<li><strong>Admin accounts:</strong> Signed in as a site administrator, the nine data sources in the Admin Insights project (users, permissions, tokens, event history, and more) were also available to query, and <code>TS Users</code> includes a <code>User Email</code> field. It's safer to connect MCP with an account that sees only the data the work requires.</li>
+<li><strong>Embedded data sources:</strong> Published data sources aren't the only target. On the tested site, all three data sources embedded in the Superstore workbook were reported as queryable.</li>
+</ul>
+<hr>
+<h3>3. What happens to the data on the Claude side?</h3>
+<p>Claude's <a href="https://claude.com/docs/connectors/policies">connector policy</a> states that tool call parameters and responses are logged and that data accessed through connectors is subject to Anthropic's privacy policy. Query results remain in the conversation history and follow your plan's chat retention. Even on personal plans that allow training, raw content from connectors and MCP servers is <a href="https://privacy.claude.com/en/articles/10023580">excluded from training data</a>, though content copied directly into the conversation may be included.</p>
+<p>Who can see that data is now decided by Claude settings as well. For plan settings, see <a href="https://www.vizney.com/claude-privacy-settings-for-work/">Using Claude at Work: Data Settings to Check on a Personal Plan</a>; for what organization admins can see, see <a href="https://www.vizney.com/claude-admin-access-to-chats/">Can Claude Admins See Your Chats? Team and Enterprise Explained</a>.</p>
+<hr>
+<p>For how admins can limit tools and row counts, see <a href="https://www.vizney.com/tableau-mcp-admin-settings/">Tableau MCP Admin Settings: Limiting Tools, Rows, and Content</a>.</p>
+<h3>Note:</h3>
+<p>This post is based on the Tableau MCP documentation, the Anthropic Privacy Center, and Claude's connector policy as of November 2026, and may change with future updates. Tool responses were tested on November 28, 2026, by connecting Tableau Cloud's hosted MCP server to Claude with sample data; Tableau Pulse tools were not tested.</p>

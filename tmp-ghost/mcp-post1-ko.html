@@ -1,0 +1,31 @@
+<p>태블로 MCP(Tableau MCP)를 클로드(Claude)에 연결하면, Claude는 연결한 사용자의 태블로 권한 안에서만 데이터를 조회합니다. 하지만 일단 조회된 행과 뷰 데이터는 도구 실행 결과로 대화에 들어가고, 그때부터는 태블로 권한이 아니라 Claude의 보관 정책과 관리 설정을 따릅니다.</p>
+<p>태블로 클라우드(Tableau Cloud)의 호스팅 MCP(mcp.tableau.com)로 도구별 응답을 확인한 결과, 메타데이터에는 필드 값 샘플이 없었지만 계산식과 매개변수 값 목록이 들어 있었고, 실패한 쿼리의 오류 메시지에도 실제 값이 담겨 있었습니다. 연결 방법은 <a href="https://kr.vizney.com/connect-tableau-cloud-mcp-to-claude/">클로드(Claude)에 태블로 클라우드(Tableau Cloud) MCP 연동하기</a>에서 다뤘습니다.</p>
+<hr>
+<h3>1. 태블로 MCP는 도구마다 무엇을 Claude에 넘기나요?</h3>
+<p>도구가 돌려준 응답이 곧 Claude 대화에 들어가는 내용입니다. 사이트 관리자 계정으로 태블로 샘플 데이터(Superstore)를 조회했을 때, 도구별 응답은 다음과 같았습니다.</p>
+<figure class="kg-card kg-image-card"><img src="{{IMG1}}" alt="태블로 MCP 도구별 응답 발췌. 메타데이터 응답에는 계산식 SUM([Profit])/SUM([Sales])가, 필터 오류 메시지에는 실제 고객 이름 Aaron Hawkins가, 뷰 이미지 응답에는 60초 뒤 만료되는 다운로드 링크가 담겨 있다."></figure>
+<ul>
+<li><strong>메타데이터(<code>get-datasource-metadata</code>):</strong> 필드 이름과 데이터 유형, 논리 테이블 사이의 관계(조인 키), 계산식의 수식(예: <code>SUM([Profit])/SUM([Sales])</code>), 매개변수의 현재 값과 범위가 넘어갑니다. 필드 값 샘플은 없었습니다. 다만 목록형 매개변수는 허용 값 목록 전체가 함께 오고, 필드를 하나만 골라 요청해도 매개변수 정보는 빠지지 않았습니다.</li>
+<li><strong>데이터 원본 쿼리(<code>query-datasource</code>):</strong> 집계 결과가 행 단위로 넘어가고, 질문에 따라 주문 ID, 고객 이름, 도시 같은 행 수준 값도 그대로 조회됩니다.</li>
+<li><strong>뷰 데이터(<code>get-view-data</code>):</strong> 대시보드 첫 번째 시트의 요약 데이터를 CSV로 돌려줍니다. 행 수를 정하는 인자가 없어, 확인한 대시보드에서는 400행이 넘는 데이터가 화면에 표시되는 형식(통화 기호, 천 단위 구분 기호) 그대로 한 번에 넘어왔습니다.</li>
+<li><strong>뷰 이미지(<code>get-view-image</code>)와 워크북 파일(<code>download-workbook</code>):</strong> 파일은 태블로 쪽 S3 저장소에 올라가고, 응답에는 60초 뒤 만료되는 다운로드 링크만 담깁니다. Claude가 이 링크를 열 수 있는 환경이면(코드 실행의 네트워크 허용 설정에 따라 다릅니다) 파일이 Claude의 코드 실행 환경으로 내려오고, 이미지를 읽는 순간 대시보드의 KPI 숫자까지 대화에 들어옵니다. 링크를 열지 않으면 대화에는 만료된 링크만 남습니다.</li>
+<li><strong>목록 도구(<code>list-workbooks</code> 등):</strong> 콘텐츠 이름과 설명이 넘어가고, 워크북 목록에는 소유자의 사용자 이름(이메일 형식)도 들어 있었습니다.</li>
+</ul>
+<p>실패한 호출도 데이터를 넘깁니다. 데이터에 없는 고객 이름으로 필터를 걸자 쿼리는 실패했지만, 오류 메시지에 비슷한 실제 고객 이름이 담겨 왔습니다.</p>
+<blockquote>Filter validation failed for field "Customer Name". The following values were not found: Aron Hawkins. Did you mean: Aaron Hawkins?</blockquote>
+<p>메타데이터 도구만 허용해도 계산식과 매개변수 값 목록은 넘어갑니다. 고객명이나 거래처명을 목록형 매개변수로 둔 데이터 원본은 연결 전에 따로 점검하는 편이 좋습니다.</p>
+<hr>
+<h3>2. 조회할 수 있는 범위는 무엇으로 정해지나요?</h3>
+<p>범위를 정하는 것은 연결할 때 로그인한 태블로 계정의 사이트 역할과 권한입니다. <a href="https://tableau.github.io/tableau-mcp/docs/hosted-tableau-mcp">호스팅 MCP</a>는 각 도구 호출을 그 사용자로 실행하며, 권한이 없는 데이터 원본은 403 오류로 거부되고 응답에 데이터가 담기지 않습니다. 다만 권한 안의 범위가 생각보다 넓을 수 있습니다.</p>
+<ul>
+<li><strong>관리자 계정:</strong> 사이트 관리자 계정으로 연결하자 Admin Insights 프로젝트의 데이터 원본 9개(사용자, 권한, 토큰, 이벤트 기록 등)도 조회 대상에 올랐고, <code>TS Users</code>에는 <code>User Email</code> 필드가 있었습니다. MCP 연결에는 업무에 필요한 데이터만 볼 수 있는 계정을 쓰는 편이 좋습니다.</li>
+<li><strong>워크북에 포함된 데이터 원본:</strong> 게시된 데이터 원본만 대상이 되는 것은 아닙니다. 확인한 사이트에서는 Superstore 워크북에 포함된(embedded) 데이터 원본 3개도 조회 가능으로 표시됐습니다.</li>
+</ul>
+<hr>
+<h3>3. Claude로 넘어간 데이터는 어떻게 처리되나요?</h3>
+<p>Claude의 <a href="https://claude.com/docs/connectors/policies">커넥터 정책</a>은 도구 호출의 인자와 응답을 기록하고, 커넥터로 가져온 데이터에 Anthropic 개인정보 처리방침을 적용한다고 밝히고 있습니다. 조회 결과는 대화 기록의 일부로 남고, 보관 기간은 요금제의 대화 보관 정책을 따릅니다. 개인 요금제에서 학습을 허용해도 커넥터와 MCP 서버의 원본 내용은 학습 데이터에서 <a href="https://privacy.claude.com/en/articles/10023580">제외되지만</a>, 대화에 직접 복사된 내용은 포함될 수 있습니다.</p>
+<p>이 데이터를 누가 볼 수 있는지도 이제 Claude 쪽 설정이 정합니다. 요금제별 설정은 <a href="https://kr.vizney.com/claude-privacy-settings-for-work/">회사에서 클로드(Claude)를 쓸 때 확인할 데이터 설정</a>에서, 조직 관리자의 열람 범위는 <a href="https://kr.vizney.com/claude-admin-access-to-chats/">회사 클로드(Claude) 계정의 대화를 관리자가 볼 수 있는 범위</a>에서 다뤘습니다.</p>
+<hr>
+<p>넘어가는 도구와 행 수를 관리자가 제한하는 방법은 <a href="https://kr.vizney.com/tableau-mcp-admin-settings/">태블로 MCP(Tableau MCP) 관리자 제한 설정</a>에서 다룹니다.</p>
+<h3>Note:</h3>
+<p>이번 포스트의 내용은 태블로 MCP 공식 문서, Anthropic 개인정보 보호 센터와 Claude 커넥터 정책을 기반으로 작성되었으며, 이후 업데이트를 통해 변경될 수 있습니다. 도구별 응답은 2026년 11월 28일 태블로 클라우드 호스팅 MCP를 Claude에 연결해 샘플 데이터로 확인한 결과이며, 태블로 펄스(Tableau Pulse) 도구는 확인 대상에서 제외했습니다.</p>

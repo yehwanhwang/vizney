@@ -1,0 +1,41 @@
+<p>태블로 클라우드(Tableau Cloud)의 호스팅 MCP(mcp.tableau.com)는 사이트 관리자가 서비스 자체를 끌 수 없습니다. 대신 REST API의 MCP 사이트 설정으로 쓸 수 있는 도구, 결과 행 수, 대상 콘텐츠를 제한하고, Claude 쪽에서는 조직의 커넥터 도구 권한으로 승인 여부를 정합니다.</p>
+<p>설정을 실제로 적용해 보면, 행 수 제한은 연결된 세션에 바로 걸리지만 도구 제외는 Claude에서 도구 목록을 새로 고쳐야 반영됩니다. MCP로 넘어가는 데이터는 <a href="https://kr.vizney.com/tableau-mcp-data-security/">태블로 MCP(Tableau MCP) 보안: 클로드(Claude)로 넘어가는 데이터</a>에서 다뤘습니다.</p>
+<hr>
+<h3>1. 태블로 사이트 설정으로 무엇을 제한할 수 있나요?</h3>
+<p><a href="https://tableau.github.io/tableau-mcp/docs/configuration/mcp-config/site-settings">MCP 사이트 설정</a>은 <a href="https://help.tableau.com/current/api/rest_api/en-us/REST/rest_api_ref_tableau_mcp.htm">REST API</a>로 지정하며(API 3.29, 태블로 클라우드 2026년 6월 이후), 사이트 또는 서버 관리자만 바꿀 수 있습니다. 이 설정은 Claude뿐 아니라 그 사이트에 연결하는 모든 MCP 클라이언트에 적용됩니다.</p>
+<ul>
+<li><strong>도구(<code>EXCLUDE_TOOLS</code>, <code>INCLUDE_TOOLS</code>):</strong> 쓰지 않을 도구나 도구 그룹을 빼거나, 쓸 도구만 남깁니다. 도구 이름 하나만 지정하면 그 도구만 빠지고, 같은 그룹의 다른 도구는 그대로 남습니다.</li>
+<li><strong>결과 행 수(<code>MAX_RESULT_LIMIT</code>, <code>MAX_RESULT_LIMITS</code>):</strong> <code>limit</code> 인자가 있는 도구의 결과 수 상한입니다. <code>get-view-data</code>처럼 이 인자가 없는 도구에는 적용되지 않으므로, 막아야 할 도구는 제외 목록에 넣습니다.</li>
+<li><strong>대상 콘텐츠(<code>INCLUDE_PROJECT_IDS</code>, <code>INCLUDE_DATASOURCE_IDS</code>, <code>INCLUDE_WORKBOOK_IDS</code>, <code>INCLUDE_VIEW_IDS</code>, <code>INCLUDE_TAGS</code>):</strong> 지정한 프로젝트, 데이터 원본, 워크북, 뷰, 태그의 콘텐츠만 조회되고, 범위 밖 콘텐츠는 목록과 검색 결과에서도 빠집니다. 변수마다 적용되는 도구가 다르므로(예: <code>INCLUDE_DATASOURCE_IDS</code>는 워크북·뷰 도구에 영향이 없음) <a href="https://tableau.github.io/tableau-mcp/docs/configuration/mcp-config/tool-scoping">도구 범위 문서</a>를 함께 확인하는 편이 좋습니다.</li>
+<li><strong>필터 검증 요청(<code>DISABLE_QUERY_DATASOURCE_VALIDATION_REQUESTS</code>):</strong> 없는 값으로 필터를 걸면 오류 메시지에 비슷한 실제 값을 제안하는데, 이 제안은 필터 검증 과정에서 나옵니다. 검증 요청은 사이트 설정으로 끌 수 있고, 쿼리 기능은 그대로 남습니다.</li>
+<li><strong>감사 기록:</strong> OAuth 로그인과 도구 호출은 태블로의 활동·감사 기록에 남습니다.</li>
+</ul>
+<p>예를 들어 파일과 이미지로 데이터를 통째로 넘기는 도구를 빼고 쿼리 결과를 1,000행으로 제한하려면 다음과 같이 지정합니다. <code>POST</code>는 사이트의 MCP 설정 목록 전체를 요청 내용으로 바꾸므로, 기존 설정이 있으면 <code>GET</code>으로 먼저 확인합니다.</p>
+<pre><code>POST /api/3.29/sites/{site-id}/settings/mcp
+
+{
+  "mcpSiteSettings": {
+    "settings": [
+      { "key": "EXCLUDE_TOOLS", "value": "download-workbook,get-view-image,get-custom-view-image" },
+      { "key": "MAX_RESULT_LIMITS", "value": "query-datasource:1000" }
+    ]
+  }
+}</code></pre>
+<p>뷰의 요약 데이터까지 막으려면 <code>get-view-data</code>와 <code>get-custom-view-data</code>도 제외 목록에 넣습니다. 사용자가 자기 클라이언트에서 이 설정을 요청 단위로 바꾸는 기능(<code>ALLOWED_REQUEST_OVERRIDES</code>)은 기본값에서 꺼져 있습니다.</p>
+<hr>
+<h3>2. 설정은 언제 반영되나요?</h3>
+<p>Claude에 연결한 상태에서 사이트 설정을 바꿔 보면, 두 설정이 반영되는 시점이 달랐습니다.</p>
+<ul>
+<li><strong>행 수 제한:</strong> <code>query-datasource:2</code>로 지정하자 연결을 유지한 상태에서도 다음 쿼리부터 2행만 돌아왔고, 응답에 <code>truncationReason: "admin-cap"</code>이 표시됐습니다.</li>
+<li><strong>도구 제외:</strong> <code>download-workbook</code>을 제외해도 이미 연결된 세션에서는 계속 실행됐습니다. 커넥터를 다시 연결하자 도구 목록에서 빠졌고, 설정을 지운 뒤에는 Tableau Cloud 커넥터 화면의 ⋯ 메뉴에서 '도구 목록 새로 고침'만 해도 도구가 돌아왔습니다.</li>
+</ul>
+<p>도구 제외를 바꾼 뒤에는 이미 연결한 사용자에게 도구 목록을 새로 고치거나 다시 연결하도록 안내하는 편이 좋습니다.</p>
+<hr>
+<h3>3. Claude 쪽에서는 무엇을 정할 수 있나요?</h3>
+<p>Team·Enterprise의 소유자(Owner)는 조직 설정(Organization settings) → 커넥터(Connectors)에서 태블로 커넥터를 선택하고, 도구(Tools) 탭에서 도구 또는 도구 분류별로 'Always allow', 'Needs approval', 'Blocked' 중 하나를 <a href="https://support.claude.com/en/articles/11176164">정할 수 있습니다</a>. 이 설정은 조직 전체에 적용되고 구성원이 바꿀 수 없습니다.</p>
+<figure class="kg-card kg-image-card"><img src="{{IMG2}}" alt="Claude 커넥터의 태블로 도구 분류. 읽기 전용 도구에 download-workbook, get-view-data, get-view-image가 들어 있고, 쓰기/삭제 도구에는 move-workbook, publish-workbook, request-workbook-upload가 있다."></figure>
+<p>분류 단위로 정할 때는 각 분류에 어떤 도구가 들어 있는지 먼저 확인하는 편이 좋습니다. Claude는 <code>download-workbook</code>, <code>get-view-image</code>, <code>get-view-data</code>를 읽기 전용 도구로 분류합니다. 읽기 전용 분류 전체를 'Always allow'로 두면 워크북 파일 다운로드와 뷰 이미지도 함께 허용되므로, 이 도구들은 개별로 'Needs approval'이나 'Blocked'로 두는 편이 안전합니다.</p>
+<p>두 설정은 적용 범위가 다릅니다. 태블로 사이트 설정은 그 사이트에 연결하는 모든 MCP 클라이언트에 적용되고, Claude 조직 설정은 그 조직 계정의 Claude에만 적용됩니다. 밖으로 나가면 안 되는 데이터는 태블로 사이트 설정에서 막고, 남은 도구에는 Claude의 승인 절차를 두는 편이 관리하기 쉽습니다.</p>
+<hr>
+<h3>Note:</h3>
+<p>이번 포스트의 내용은 태블로 MCP 공식 문서와 태블로 REST API 문서, Claude 도움말을 기반으로 작성되었으며, 이후 업데이트를 통해 변경될 수 있습니다. 설정이 반영되는 시점은 2026년 11월 28일 태블로 클라우드 호스팅 MCP를 Claude에 연결해 확인한 결과입니다.</p>

@@ -1,0 +1,41 @@
+<p>Site administrators can't turn off Tableau Cloud's hosted MCP server (mcp.tableau.com). Instead, they can restrict which tools are available, how many rows come back, and which content is in scope through the MCP site settings in the REST API, while Claude organization settings decide which tools need approval.</p>
+<p>When these settings are applied, they don't all take effect at the same moment: row caps apply to an open session right away, but tool exclusions appear only after the tool list is refreshed in Claude. For what MCP sends to Claude, see <a href="https://www.vizney.com/tableau-mcp-data-security/">Tableau MCP Security: What Data Reaches Claude</a>.</p>
+<hr>
+<h3>1. What can Tableau site settings restrict?</h3>
+<p><a href="https://tableau.github.io/tableau-mcp/docs/configuration/mcp-config/site-settings">MCP site settings</a> are set through the <a href="https://help.tableau.com/current/api/rest_api/en-us/REST/rest_api_ref_tableau_mcp.htm">REST API</a> (API 3.29, Tableau Cloud June 2026 and later), and only site or server administrators can change them. They apply to every MCP client that connects to the site, not just Claude.</p>
+<ul>
+<li><strong>Tools (<code>EXCLUDE_TOOLS</code>, <code>INCLUDE_TOOLS</code>):</strong> Remove the tools or tool groups you don't use, or keep only the ones you do. Naming a single tool removes just that tool; other tools in the same group stay available.</li>
+<li><strong>Row caps (<code>MAX_RESULT_LIMIT</code>, <code>MAX_RESULT_LIMITS</code>):</strong> Caps results for tools that take a <code>limit</code> argument. Tools without one, such as <code>get-view-data</code>, aren't capped, so tools that need to be blocked belong on the exclusion list.</li>
+<li><strong>Content scope (<code>INCLUDE_PROJECT_IDS</code>, <code>INCLUDE_DATASOURCE_IDS</code>, <code>INCLUDE_WORKBOOK_IDS</code>, <code>INCLUDE_VIEW_IDS</code>, <code>INCLUDE_TAGS</code>):</strong> Only content in the specified projects, data sources, workbooks, views, or tags can be queried, and out-of-scope content is filtered out of listing and search results. Each variable covers different tools (for example, <code>INCLUDE_DATASOURCE_IDS</code> has no effect on workbook and view tools), so the <a href="https://tableau.github.io/tableau-mcp/docs/configuration/mcp-config/tool-scoping">tool scoping</a> page is worth checking.</li>
+<li><strong>Filter validation (<code>DISABLE_QUERY_DATASOURCE_VALIDATION_REQUESTS</code>):</strong> When a filter uses a value that doesn't exist, the error message suggests similar real values. That suggestion comes from filter validation, which can be turned off per site; querying still works.</li>
+<li><strong>Audit:</strong> OAuth sign-ins and tool calls are logged through Tableau's standard activity and audit pipelines.</li>
+</ul>
+<p>For example, to exclude the tools that hand over whole files and images and cap query results at 1,000 rows, send the following. <code>POST</code> replaces the site's entire MCP settings list, so check existing settings with <code>GET</code> first.</p>
+<pre><code>POST /api/3.29/sites/{site-id}/settings/mcp
+
+{
+  "mcpSiteSettings": {
+    "settings": [
+      { "key": "EXCLUDE_TOOLS", "value": "download-workbook,get-view-image,get-custom-view-image" },
+      { "key": "MAX_RESULT_LIMITS", "value": "query-datasource:1000" }
+    ]
+  }
+}</code></pre>
+<p>To block view summary data as well, add <code>get-view-data</code> and <code>get-custom-view-data</code> to the exclusion list. Request-level overrides, which would let users change these settings from their own client, are off by default (<code>ALLOWED_REQUEST_OVERRIDES</code>).</p>
+<hr>
+<h3>2. When do the settings take effect?</h3>
+<p>Changing the site settings while Claude was connected showed that the two settings take effect at different times.</p>
+<ul>
+<li><strong>Row caps:</strong> After setting <code>query-datasource:2</code>, the very next query in the open session returned only two rows, and the response showed <code>truncationReason: "admin-cap"</code>.</li>
+<li><strong>Tool exclusions:</strong> After excluding <code>download-workbook</code>, the tool kept working in the existing session. It disappeared from the tool list once the connector was reconnected, and after the setting was cleared, refreshing the tool list from the ⋯ menu on the Tableau Cloud connector page was enough to bring it back.</li>
+</ul>
+<p>After changing tool exclusions, it's worth asking connected users to refresh their tool list or reconnect.</p>
+<hr>
+<h3>3. What can you control on the Claude side?</h3>
+<p>Owners on Team and Enterprise plans can go to Organization settings → Connectors, select the Tableau connector, and on the Tools tab <a href="https://support.claude.com/en/articles/11176164">set each tool or tool category</a> to Always allow, Needs approval, or Blocked. The setting applies to the whole organization, and members can't override it.</p>
+<figure class="kg-card kg-image-card"><img src="{{IMG2}}" alt="How Claude groups the Tableau tools. The read-only tools include download-workbook, get-view-data, and get-view-image; the write/delete tools include move-workbook, publish-workbook, and request-workbook-upload."></figure>
+<p>When setting permissions by category, check which tools each category contains. Claude classifies <code>download-workbook</code>, <code>get-view-image</code>, and <code>get-view-data</code> as read-only tools. Setting the whole read-only category to Always allow also allows workbook downloads and view images, so it's safer to set those tools individually to Needs approval or Blocked.</p>
+<p>The two settings reach different places. Tableau site settings apply to every MCP client that connects to the site, while Claude's organization settings apply only to Claude accounts in that organization. Data that must not leave Tableau is best blocked in the site settings, with Claude's approval step on the tools that remain.</p>
+<hr>
+<h3>Note:</h3>
+<p>This post is based on the Tableau MCP documentation, the Tableau REST API reference, and the Claude Help Center as of November 2026, and may change with future updates. When each setting takes effect was tested on November 28, 2026, by connecting Tableau Cloud's hosted MCP server to Claude.</p>
